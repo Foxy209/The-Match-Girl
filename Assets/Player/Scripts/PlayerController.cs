@@ -1,7 +1,4 @@
-﻿//by EvolveGames
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace EvolveGames
 {
@@ -10,7 +7,6 @@ namespace EvolveGames
     {
         [Header("PlayerController")]
         [SerializeField] public Transform Camera;
-        [SerializeField] public ItemChange Items;
         [SerializeField, Range(1, 10)] float walkingSpeed = 3.0f;
         [Range(0.1f, 5)] public float CroughSpeed = 1.0f;
         [SerializeField, Range(2, 20)] float RuningSpeed = 4.0f;
@@ -34,15 +30,8 @@ namespace EvolveGames
         bool isClimbing = false;
 
         [Space(20)]
-        [Header("HandsHide")]
-        [SerializeField] bool CanHideDistanceWall = true;
-        [SerializeField, Range(0.1f, 5)] float HideDistance = 1.5f;
-        [SerializeField] int LayerMaskInt = 1;
-
-        [Space(20)]
         [Header("Input")]
         [SerializeField] KeyCode CroughKey = KeyCode.LeftControl;
-
 
         [HideInInspector] public CharacterController characterController;
         [HideInInspector] public Vector3 moveDirection = Vector3.zero;
@@ -60,12 +49,11 @@ namespace EvolveGames
         [HideInInspector] public float Lookhorizontal;
         float RunningValue;
         float installGravity;
-        bool WallDistance;
         [HideInInspector] public float WalkingValue;
+
         void Start()
         {
             characterController = GetComponent<CharacterController>();
-            if (Items == null && GetComponent<ItemChange>()) Items = GetComponent<ItemChange>();
             cam = GetComponentInChildren<Camera>();
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
@@ -80,7 +68,6 @@ namespace EvolveGames
         void Update()
         {
             RaycastHit CroughCheck;
-            RaycastHit ObjectCheck;
 
             if (!characterController.isGrounded && !isClimbing)
             {
@@ -127,9 +114,8 @@ namespace EvolveGames
                 float Height = Mathf.Lerp(characterController.height, CroughHeight, 5 * Time.deltaTime);
                 characterController.height = Height;
                 WalkingValue = Mathf.Lerp(WalkingValue, CroughSpeed, 6 * Time.deltaTime);
-
             }
-            else if (!Physics.Raycast(GetComponentInChildren<Camera>().transform.position, transform.TransformDirection(Vector3.up), out CroughCheck, 0.8f, 1))
+            else if (!Physics.Raycast(cam.transform.position, transform.TransformDirection(Vector3.up), out CroughCheck, 0.8f, 1))
             {
                 if (characterController.height != InstallCroughHeight)
                 {
@@ -139,43 +125,6 @@ namespace EvolveGames
                     WalkingValue = Mathf.Lerp(WalkingValue, walkingSpeed, 4 * Time.deltaTime);
                 }
             }
-
-            if(WallDistance != Physics.Raycast(GetComponentInChildren<Camera>().transform.position, transform.TransformDirection(Vector3.forward), out ObjectCheck, HideDistance, LayerMaskInt) && CanHideDistanceWall)
-            {
-                WallDistance = Physics.Raycast(GetComponentInChildren<Camera>().transform.position, transform.TransformDirection(Vector3.forward), out ObjectCheck, HideDistance, LayerMaskInt);
-                Items.ani.SetBool("Hide", WallDistance);
-                Items.DefiniteHide = WallDistance;
-            }
         }
-
-        private void OnTriggerEnter(Collider other)
-        {
-            if (other.tag == "Ladder" && CanClimbing)
-            { 
-                CanRunning = false;
-                isClimbing = true;
-                WalkingValue /= 2;
-                Items.Hide(true);
-            }
-        }
-        private void OnTriggerStay(Collider other)
-        {
-            if (other.tag == "Ladder" && CanClimbing)
-            {
-                moveDirection = new Vector3(0, Input.GetAxis("Vertical") * Speed * (-Camera.localRotation.x / 1.7f), 0);
-            }
-        }
-        private void OnTriggerExit(Collider other)
-        {
-            if (other.tag == "Ladder" && CanClimbing)
-            {
-                CanRunning = true;
-                isClimbing = false;
-                WalkingValue *= 2;
-                Items.ani.SetBool("Hide", false);
-                Items.Hide(false);
-            }
-        }
-
     }
 }
